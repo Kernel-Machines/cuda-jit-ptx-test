@@ -1,0 +1,1 @@
+include src/cuda_jit_ptx_test/data/*.ptx

@@ -30,3 +30,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/cuda_jit_ptx_test"]
+include = [
+    "src/cuda_jit_ptx_test/data/*.ptx",  # Include .ptx files in the data directory
+]
