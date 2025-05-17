@@ -1,35 +1,36 @@
 [project]
-name = "cuda-jit-ptx-test"
-version = "0.1.0"
-description = "A Python package with CUDA-dependent functionality"
-readme = "README.md"
+name            = "cuda-jit-ptx-test"
+version         = "0.1.0"                       # or make this dynamic later
+description     = "A Python package with CUDA-dependent functionality"
+readme          = "README.md"
 requires-python = ">=3.8"
-license = {text = "MIT"}
-authors = [
-    {name = "Kernel Machines", email = "kernel_machines@pm.me"}
-]
-dependencies = [
-    "numpy>=1.21",
-]
+license         = {text = "MIT"}
+authors         = [{name="Kernel Machines", email="kernel_machines@pm.me"}]
+dependencies    = ["numpy>=1.21"]
 
 [project.optional-dependencies]
-cu11 = [
-    "cuda-core[cu11]>=0.1",
-]
-cu12 = [
-    "cuda-core[cu12]>=0.1",
-]
+cu11 = ["cuda-core[cu11]>=0.1"]
+cu12 = ["cuda-core[cu12]>=0.1"]
 
 [project.urls]
-Homepage = "https://github.com/Kernel-Machines/cuda-jit-ptx-test"
+Homepage   = "https://github.com/Kernel-Machines/cuda-jit-ptx-test"
 Repository = "https://github.com/Kernel-Machines/cuda-jit-ptx-test.git"
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires       = ["hatchling>=1.24"]
+build-backend  = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/cuda_jit_ptx_test"]
-include = [
-    "src/cuda_jit_ptx_test/data/*.ptx",  # Include .ptx files in the data directory
+packages      = ["cuda_jit_ptx_test"]
+package-dir   = {"" = "src"}
+include       = [
+  "src/cuda_jit_ptx_test/data/**/*.ptx",
+  "src/cuda_jit_ptx_test/cuda/**/*.{cu,cuh}",
 ]
+
+[tool.hatch.build.targets.wheel.force-include]
+thirdparty = "thirdparty"
+
+[tool.hatch.build.targets.sdist]
+[tool.hatch.build.targets.sdist.force-include]
+thirdparty = "thirdparty"
