@@ -1,0 +1,3 @@
+thirdparty is a resource for python but it might also be empty
+if submodules are not loaded during clone, jit should rely on 
+pre-compiled ptx.

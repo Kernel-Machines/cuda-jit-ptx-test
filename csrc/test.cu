@@ -15,3 +15,13 @@ kernel() {
     print("s : "); print(s); print("\n");
     print("i : "); print(i); print("\n");
 }
+
+extern "C"
+__global__
+void
+tensor_test(
+    float *A
+) {
+    float v = *A;
+    *A = v+1;
+}
