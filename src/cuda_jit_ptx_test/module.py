@@ -8,6 +8,8 @@ from cuda.core.experimental import Device, LaunchConfig, Program, ProgramOptions
 import importlib.resources
 from pathlib import Path
 
+# from .paths import *
+
 def read_local_ptx_data():
     """Read the uncompressed local.ptx file bundled with the package."""
     package = "cuda_jit_ptx_test.data"
