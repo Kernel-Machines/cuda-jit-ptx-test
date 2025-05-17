@@ -37,63 +37,12 @@ def read_local_ptx_data_bytes():
         raise FileNotFoundError("local.ptx not found in package data directory")
     except UnicodeDecodeError:
         raise ValueError("local.ptx contains invalid UTF-8 content")
-
-
-def read_local_cuda():
-    """Read the uncompressed local.ptx file bundled with the package."""
-    package = "cuda_jit_ptx_test.cuda"
-    resource = "test.cu"
-    
-    try:
-        with importlib.resources.as_file(importlib.resources.files(package) / resource) as ptx_path:
-            with open(ptx_path, "r", encoding="utf-8") as f:
-                data = f.read()  # Read as text
-                return data
-    except FileNotFoundError:
-        raise FileNotFoundError("local.ptx not found in package data directory")
-    except UnicodeDecodeError:
-        raise ValueError("local.ptx contains invalid UTF-8 content")
-
-from importlib.resources import files
-
-def get_resource_dir(resource_type):
-    """Get stable string path to a resource directory (e.g., 'cuda', 'cuda.include', 'thirdparty')."""
-    valid_types = {"cuda", "cuda.include", "data", "thirdparty"}
-    if resource_type not in valid_types:
-        raise ValueError(f"resource_type must be one of {valid_types}")
-    
-    if resource_type == "thirdparty":
-        package = "thirdparty"  # Top-level thirdparty directory
-    else:
-        package = f"cuda_jit_ptx_test.{resource_type}"  # Subpackages under cuda_jit_ptx_test
-    
-    resource_path = files(package)
-    if not resource_path.is_dir():
-        raise FileNotFoundError(f"{resource_type} directory not found")
-    
-    # Handle MultiplexedPath by accessing the first path or converting to string
-    if hasattr(resource_path, '_paths'):
-        return str(resource_path._paths[0])
-    return str(resource_path)
-
-def get_cutlass_folder(package_name: str = "cuda_jit_ptx_test", folder_path: str = "thirdparty") -> Path | None:
-    """
-    Get a stable path to the cutlass folder in the package, with safe failure if it doesn't exist.
-    
-    Args:
-        package_name: Name of the installed Python package.
-        folder_path: Relative path to the folder (e.g., 'thirdparty/cutlass').
-    
-    Returns:
-        Path to the folder if it exists, None otherwise.
-    """
-    package_path = importlib.resources.files('cuda_jit_ptx_test.thirdparty')
         
-def thirdparty_dir() -> Path:
+def get_top_level_repo_dir(dir) -> Path:
     # directory *beside* the package (wheel layout)
-    wheel_copy = importlib.resources.files("cuda_jit_ptx_test").parent / "thirdparty"
+    wheel_copy = importlib.resources.files("cuda_jit_ptx_test").parent / dir
     # directory *beside* src/ (editable / repo checkout)
-    repo_copy  = Path(__file__).resolve().parents[2] / "thirdparty"
+    repo_copy  = Path(__file__).resolve().parents[2] / dir
 
     for path in (repo_copy, wheel_copy):
         if path.is_dir():
@@ -101,7 +50,19 @@ def thirdparty_dir() -> Path:
 
     raise FileNotFoundError("thirdparty directory not found")
 
-def cuda_include_dir() -> Path:
+def get_local_cuda_src_dir() -> Path:
+    return get_top_level_repo_dir('csrc')
+
+def get_include_local_cuda_dir() -> Path:
+    return get_top_level_repo_dir('include')
+
+def get_include_dir_cutlass() -> Path:
+    return get_top_level_repo_dir('thirdparty') / 'cutlass/include'
+
+def get_include_dir_cutlass_tools() -> Path:
+    return get_top_level_repo_dir('thirdparty') / 'cutlass/tools/util/include'
+
+def get_include_dir_cuda() -> Path:
     """Best-effort guess of the Toolkit’s <cuda>/include directory."""
     import os, shutil
     if os.getenv("CUDA_HOME"):
@@ -156,7 +117,9 @@ def run_local():
 
 def run_local_cuda():
 
-    code = read_local_cuda()
+    cuda_code_path = get_local_cuda_src_dir() / 'test.cu'
+    with open(cuda_code_path, "r", encoding="utf-8") as f:
+        code = f.read()  # Read as text
 
     dev = Device()
     dev.set_current()
@@ -175,10 +138,10 @@ def run_local_cuda():
                     arch=f"sm_{arch}",
                     device_as_default_execution_space=True,
                     include_path=[
-                        get_resource_dir('cuda'),
-                        thirdparty_dir() / 'cutlass/include',
-                        thirdparty_dir() / 'cutlass/tools/util/include',
-                        cuda_include_dir()
+                        get_include_local_cuda_dir(),       # *.cuh
+                        get_include_dir_cutlass(),          # main cutlass include
+                        get_include_dir_cutlass_tools(),    # cutlass tools include
+                        get_include_dir_cuda()              # cuda toolkit for <cuda/src/assert>, etc.. (dependency of cutlass)
                     ]
                 )
         ).compile(
